@@ -27,7 +27,7 @@ class Bzip2Conan(ConanFile):
     def build(self):
         arch = "export CFLAGS=-m32 && " if self.settings.arch == "x86" else ""
         zlib = "--with-zlib=%s" % self.deps_cpp_info["zlib"].lib_paths[0]
-        configure_command = "%s cd %s && ./configure %s" % (arch, self.ZIP_FOLDER_NAME, zlib)
+        configure_command = "%s cd %s && ./configure %s --with-python=no" % (arch, self.ZIP_FOLDER_NAME, zlib)
         self.output.warn(configure_command)
         self.run(configure_command)
         self.run("cd %s && make" % self.ZIP_FOLDER_NAME)
