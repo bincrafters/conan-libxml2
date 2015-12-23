@@ -12,20 +12,22 @@ if __name__ == "__main__":
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)
 
-    # Shared x86_64
-    test('-s arch=x86_64 -s build_type=Debug -o bzip2:shared=True')
-#     test('-s arch=x86_64 -s build_type=Release -o bzip2:shared=True')
-# 
-#     # Static x86_64
-#     test('-s arch=x86_64 -s build_type=Debug -o bzip2:shared=False')
-#     test('-s arch=x86_64 -s build_type=Release -o bzip2:shared=False')
-# 
-#     
+#       
 #     # Static x86
-#     test('-s arch=x86 -s build_type=Debug -o bzip2:shared=False')
-#     test('-s arch=x86 -s build_type=Release -o bzip2:shared=False')
+#     test('-s arch=x86 -s build_type=Debug -o libxml2:shared=False')
+#     test('-s arch=x86 -s build_type=Release -o libxml2:shared=False')
 #     # Shared x86
-#     test('-s arch=x86 -s build_type=Debug -o bzip2:shared=True')
-#     test('-s arch=x86 -s build_type=Release -o bzip2:shared=True')
+#     test('-s arch=x86 -s build_type=Debug -o libxml2:shared=True')
+#     test('-s arch=x86 -s build_type=Release -o libxml2:shared=True')
+# 
+#    
 
+    # Shared x86_64
+    test('-s arch=x86_64 -s build_type=Debug -o libxml2:shared=True')
+    test('-s arch=x86_64 -s build_type=Release -o libxml2:shared=True')
+ 
+    # Static x86_64
+    test('-s arch=x86_64 -s build_type=Debug -o libxml2:shared=False')
+    test('-s arch=x86_64 -s build_type=Release -o libxml2:shared=False')
+ 
    
