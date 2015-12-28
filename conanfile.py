@@ -4,7 +4,7 @@ from conans.tools import download, unzip, replace_in_file, check_md5
 from conans import CMake
 
 
-class Bzip2Conan(ConanFile):
+class LibxmlConan(ConanFile):
     name = "libxml2"
     version = "2.9.3"
     branch = "master"
