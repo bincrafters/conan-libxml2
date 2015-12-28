@@ -26,10 +26,9 @@ class Bzip2Conan(ConanFile):
         
     def config(self):
         self.options["zlib"].shared = self.options.shared
-        if self.settings.os == "Windows":
-            self.requires.add("winiconv/1.14.0@lasote/stable", private=False)
-            self.options.shared = True # Static in win doesn't work, runtime errors
-            self.options["zlib"].shared = True
+        self.requires.add("libiconv/1.14@lasote/stable", private=False)
+        self.options.shared = True # Static in win doesn't work, runtime errors
+        self.options["zlib"].shared = True
         
     def generic_env_configure_vars(self, verbose=False):
         """Reusable in any lib with configure!!"""
