@@ -25,6 +25,10 @@ class LibxmlConan(ConanFile):
         os.unlink(zip_name)
         
     def config(self):
+        try: # Try catch can be removed when conan 0.8 is released
+            del self.settings.compiler.libcxx 
+        except: 
+            pass
         self.options["zlib"].shared = self.options.shared
         self.requires.add("libiconv/1.14@lasote/stable", private=False)
         self.options.shared = True # Static in win doesn't work, runtime errors
