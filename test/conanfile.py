@@ -1,5 +1,5 @@
 from conans.model.conan_file import ConanFile
-from conans import CMake
+from conans import CMake, ConfigureEnvironment
 import os
 
 ############### CONFIGURE THESE VALUES ##################
@@ -28,4 +28,4 @@ class DefaultNameConan(ConanFile):
         self.copy(pattern="*.dylib", dst="bin", src="lib")
         
     def test(self):
-        self.run(".%sbin%sexample --help" % (os.sep, os.sep))
+        self.run("cd bin && .%sexample --help" % os.sep)
