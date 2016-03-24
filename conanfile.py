@@ -19,7 +19,7 @@ class LibxmlConan(ConanFile):
 
     def source(self):
         zip_name = "libxml2-%s.tar.gz" % self.version
-        download("ftp://xmlsoft.org/libxml2/%s" % zip_name, zip_name)
+        download("http://xmlsoft.org/libxml2/%s" % zip_name, zip_name)
         check_md5(zip_name, "daece17e045f1c107610e137ab50c179")
         unzip(zip_name)
         os.unlink(zip_name)
