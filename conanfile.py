@@ -45,7 +45,8 @@ class LibxmlConan(ConanFile):
         iconv_headers_paths = self.deps_cpp_info["winiconv"].include_paths[0]
         iconv_lib_paths= " ".join(['lib="%s"' % lib for lib in self.deps_cpp_info["winiconv"].lib_paths])
         
-        env_variables = self.generic_env_configure_vars()
+        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
+        env_variables = env.command_line
         compiler = "msvc" if self.settings.compiler == "Visual Studio" else self.settings.compiler == "gcc"
         debug = "yes" if self.settings.build_type == "Debug" else "no"
         
