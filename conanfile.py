@@ -28,10 +28,10 @@ class LibxmlConan(ConanFile):
             del self.settings.compiler.libcxx 
         except: 
             pass
-        self.options["zlib"].shared = self.options.shared
+        #self.options["zlib"].shared = self.options.shared
         self.requires.add("libiconv/1.14@lasote/stable", private=False)
         self.options.shared = True # Static in win doesn't work, runtime errors
-        self.options["zlib"].shared = True
+        #self.options["zlib"].shared = True
 
 
     def build(self):
