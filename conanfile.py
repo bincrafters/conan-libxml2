@@ -15,7 +15,7 @@ class LibxmlConan(ConanFile):
     default_options = "shared=False"
     exports = ["CMakeLists.txt", "FindLibXml2.cmake"]
     url = "http://github.com/lasote/conan-libxml2"
-    requires = "zlib/1.2.8@lasote/stable"
+    requires = "zlib/1.2.8@lasote/stable", "libiconv/1.14@lasote/stable"
 
     def source(self):
         zip_name = "libxml2-%s.tar.gz" % self.version
@@ -24,35 +24,28 @@ class LibxmlConan(ConanFile):
         os.unlink(zip_name)
         
     def config(self):
-        try: # Try catch can be removed when conan 0.8 is released
-            del self.settings.compiler.libcxx 
-        except: 
-            pass
-        self.options["zlib"].shared = self.options.shared
-        self.requires.add("libiconv/1.14@lasote/stable", private=False)
+        del self.settings.compiler.libcxx
         self.options.shared = True # Static in win doesn't work, runtime errors
         self.options["zlib"].shared = True
-
 
     def build(self):
         if self.settings.os == "Windows":
             self.build_windows()
         else:
             self.build_with_configure()
-            
         
     def build_windows(self):
         iconv_headers_paths = self.deps_cpp_info["winiconv"].include_paths[0]
         iconv_lib_paths= " ".join(['lib="%s"' % lib for lib in self.deps_cpp_info["winiconv"].lib_paths])
         
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        env_variables = env.command_line
+        vc_command = env.command_line_env
         compiler = "msvc" if self.settings.compiler == "Visual Studio" else self.settings.compiler == "gcc"
         debug = "yes" if self.settings.build_type == "Debug" else "no"
-        
-        configure_command = "cd %s/win32 && %s && cscript configure.js " \
-                            "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" %s" % (self.ZIP_FOLDER_NAME, 
-                                                                               env_variables,
+
+        configure_command = "%s && cd %s/win32 && cscript configure.js " \
+                            "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" %s" % (vc_command,
+                                                                               self.ZIP_FOLDER_NAME,
                                                                                compiler, 
                                                                                self.settings.compiler.runtime,
                                                                                debug, 
@@ -66,7 +59,7 @@ class LibxmlConan(ConanFile):
         replace_in_file(makefile_path, "LIBS = $(LIBS) zlib.lib", "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info["zlib"].libs[0])
         
         make_command = "nmake /f Makefile.msvc" if self.settings.compiler == "Visual Studio" else "make -f Makefile.mingw"
-        make_command = "cd %s/win32 && %s && %s" % (self.ZIP_FOLDER_NAME, env_variables, make_command)
+        make_command = "%s && cd %s/win32 && %s" % (vc_command, self.ZIP_FOLDER_NAME, make_command)
         self.output.warn(make_command)
         self.run(make_command)
         
