@@ -8,7 +8,8 @@ if __name__ == "__main__":
     if platform.system() == "Windows":
         filtered_builds = []
         for settings, options in builder.builds:
-            if settings["os"] != "Windows" or options["libxml2:shared"] == True:
+            print settings
+            if settings["compiler"] != "Visual Studio" or options["libxml2:shared"] == True:
                 filtered_builds.append([settings, options])
         builder.builds = filtered_builds
     builder.run()
