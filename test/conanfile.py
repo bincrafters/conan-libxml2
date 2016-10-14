@@ -18,6 +18,9 @@ class DefaultNameConan(ConanFile):
     generators = "cmake"
     requires = "libxml2/2.9.3@%s/%s" % (username, channel)
 
+    def config(self):
+        del self.settings.compiler.libcxx
+
     def build(self):
         cmake = CMake(self.settings)
         self.run('cmake %s %s' % (self.conanfile_directory, cmake.command_line))
