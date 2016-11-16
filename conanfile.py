@@ -23,10 +23,11 @@ class LibxmlConan(ConanFile):
         unzip(zip_name)
         os.unlink(zip_name)
         
-    def config(self):
+    def config_options(self):
         del self.settings.compiler.libcxx
-        self.options.shared = True # Static in win doesn't work, runtime errors
-        self.options["zlib"].shared = True
+        if self.settings.os == "Windows":
+            self.options.shared = True # Static in win doesn't work, runtime errors
+        # self.options["zlib"].shared = True
 
     def build(self):
         if self.settings.os == "Windows":
