@@ -79,7 +79,7 @@ class LibxmlConan(ConanFile):
             new_str = '-install_name \$soname'
             replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
                  
-        self.run("cd %s && %s ./configure --with-python=no" % (self.ZIP_FOLDER_NAME, env.command_line))
+        self.run("cd %s && %s ./configure --with-python=no --without-lzma" % (self.ZIP_FOLDER_NAME, env.command_line))
         #self.run("cd %s && %s make check" % (self.ZIP_FOLDER_NAME, env.command_line))
         self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
         
