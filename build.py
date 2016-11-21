@@ -12,7 +12,7 @@ if __name__ == "__main__":
             # Some isues with OSx and x86 with iconv, I think it could be linking with the system iconv and fails to link.
             if settings["arch"] != "x86":
                 filtered_builds.append([settings, options])
-        filtered_builds = []
+        builder.builds = filtered_builds
 
     if platform.system() == "Windows":
         filtered_builds = []
