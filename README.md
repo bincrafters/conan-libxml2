@@ -1,6 +1,7 @@
 [ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)
 [![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg?branch=stable%2F2.9.3)](https://travis-ci.org/bincrafters/conan-libxml2)
-[![Build status](https://ci.appveyor.com/api/projects/status/sxs9n6vb8nqa92l5?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)
+[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry/branch/stable/2.9.3?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2/branch/stable/2.9.3)
+
 
 [Conan.io](https://conan.io) package for [libxml2](https://xmlsoft.org) project
 
