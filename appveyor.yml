@@ -6,10 +6,10 @@ environment:
     PYTHON_ARCH: "32"
 
     matrix:
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-          CONAN_VISUAL_VERSIONS: 12
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-          CONAN_VISUAL_VERSIONS: 14
+      #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      #    CONAN_VISUAL_VERSIONS: 12
+      #  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      #    CONAN_VISUAL_VERSIONS: 14
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
           CONAN_VISUAL_VERSIONS: 15
 
@@ -18,6 +18,12 @@ install:
   - pip.exe install conan --upgrade
   - pip.exe install conan_package_tools
   - conan user # It creates the conan data directory
+
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 test_script:
   - python build.py
