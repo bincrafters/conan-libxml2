@@ -42,28 +42,29 @@ class Libxml2Conan(ConanFile):
             compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
             debug = "yes" if self.settings.build_type == "Debug" else "no"
 
-            iconv_headers_paths = ";".join(self.deps_cpp_info["libiconv"].include_paths +
-                                           self.deps_cpp_info["zlib"].include_paths)
-            iconv_lib_paths = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
-                                       self.deps_cpp_info["zlib"].lib_paths)
+            includes = ";".join(self.deps_cpp_info["libiconv"].include_paths +
+                                self.deps_cpp_info["zlib"].include_paths)
+            libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
+                            self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
                     "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
                                     vcvars,
                                     compiler,
                                     self.settings.compiler.runtime,
                                     debug,
-                                    iconv_headers_paths,
-                                    iconv_lib_paths)
+                                    includes,
+                                    libs)
             self.output.warn(configure_command)
             self.run(configure_command)
 
-            content = tools.load(os.path.join("source", "config.msvc"))
-            print content
-
-            # Zlib library name is not zlib.lib always, it depends on configuration
+            # Fix library names because they can be not just zlib.lib
             tools.replace_in_file("Makefile.msvc",
-                                  "LIBS = $(LIBS) zlib.lib",
-                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info["zlib"].libs[0])
+                                  "LIBS = $(LIBS) zlib.lib" % dep,
+                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info['zlib'].libs[0])
+            tools.replace_in_file("Makefile.msvc",
+                                  "LIBS = $(LIBS) iconv.lib" % dep,
+                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info['libiconv'].libs[0])
+
             if self.settings.compiler == "Visual Studio":
                 self.run("%s && nmake /f Makefile.msvc" % (vcvars))
             else:
