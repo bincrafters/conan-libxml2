@@ -63,7 +63,7 @@ class Libxml2Conan(ConanFile):
                                   "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info['zlib'].libs[0])
             tools.replace_in_file("Makefile.msvc",
                                   "LIBS = $(LIBS) iconv.lib",
-                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info['libiconv'].libs[0])
+                                  "LIBS = $(LIBS) %s" % self.deps_cpp_info['libiconv'].libs[0])
 
             if self.settings.compiler == "Visual Studio":
                 self.run("%s && nmake /f Makefile.msvc" % (vcvars))
