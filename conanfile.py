@@ -15,7 +15,7 @@ class Libxml2Conan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False] }
     default_options = "shared=False", "fPIC=True"
     requires = "zlib/[>=1.2.11]@conan/stable", "libiconv/1.15@bincrafters/stable"
-    exports = ["FindLibXml2.cmake"]
+    exports_sources = ["FindLibXml2.cmake", "LICENSE.md"]
     short_paths = True
 
     def source(self):
@@ -94,7 +94,11 @@ class Libxml2Conan(ConanFile):
         self.copy("FindLibXml2.cmake", ".", ".")
 
         with tools.chdir("sources"):
-            self.copy(pattern="LICENSE")
+            # copy receipt license
+            self.copy(pattern="LICENSE.md")
+            # copy package license
+            self.copy("sources/COPYING", dst="licenses", ignore_case=True, keep_path=False)
+            self.copy("sources/license*", dst="licenses", ignore_case=True, keep_path=False)
             self.copy(pattern="*.h", dst="include", src="sources/include")
             # specify glob with libxml name to avoid copying testdso.a
             self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
