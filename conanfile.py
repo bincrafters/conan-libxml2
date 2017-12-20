@@ -1,110 +1,100 @@
-from conans import ConanFile
-import os, shutil
-from conans.tools import download, unzip, replace_in_file, check_md5
-from conans import CMake, ConfigureEnvironment
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from conans import ConanFile, tools, AutoToolsBuildEnvironment
+import os
 
 
-class LibxmlConan(ConanFile):
+class Libxml2Conan(ConanFile):
     name = "libxml2"
     version = "2.9.3"
-    branch = "master"
-    ZIP_FOLDER_NAME = "libxml2-%s" % version
-    generators = "cmake"
-    settings =  "os", "compiler", "arch", "build_type"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
-    exports = ["CMakeLists.txt", "FindLibXml2.cmake"]
-    url = "http://github.com/lasote/conan-libxml2"
-    requires = "zlib/1.2.8@lasote/stable", "libiconv/1.14@lasote/stable"
+    url = "https://github.com/bincrafters/conan-libxml2"
+    description = "libxml2 is a software library for parsing XML documents"
+    license = "https://opensource.org/licenses/mit-license.html"
+    settings = "os", "arch", "compiler", "build_type"
+    options = {"shared": [True, False], "fPIC": [True, False] }
+    default_options = "shared=False", "fPIC=True"
+    requires = "zlib/[>=1.2.11]@conan/stable", "libiconv/1.15@bincrafters/stable"
+    exports = ["FindLibXml2.cmake"]
 
     def source(self):
-        zip_name = "libxml2-%s.tar.gz" % self.version
-        download("http://xmlsoft.org/sources/%s" % zip_name, zip_name)
-        unzip(zip_name)
-        os.unlink(zip_name)
-        
+        tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
+        os.rename("libxml2-{0}".format(self.version), "sources")
+        #Rename to "sources" is a convention to simplify later steps
+
     def config_options(self):
         del self.settings.compiler.libcxx
         if self.settings.os == "Windows":
             self.options.shared = True # Static in win doesn't work, runtime errors
-        # self.options["zlib"].shared = True
+        self.options["libiconv"].shared = self.options.shared
+        self.options["zlib"].shared = self.options.shared
 
     def build(self):
         if self.settings.os == "Windows":
             self.build_windows()
         else:
             self.build_with_configure()
-        
-    def build_windows(self):
-        iconv_headers_paths = self.deps_cpp_info["winiconv"].include_paths[0]
-        iconv_lib_paths= " ".join(['lib="%s"' % lib for lib in self.deps_cpp_info["winiconv"].lib_paths])
-        
-        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        vc_command = env.command_line_env
-        compiler = "msvc" if self.settings.compiler == "Visual Studio" else self.settings.compiler == "gcc"
-        debug = "yes" if self.settings.build_type == "Debug" else "no"
 
-        configure_command = "%s && cd %s/win32 && cscript configure.js " \
-                            "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" %s" % (vc_command,
-                                                                               self.ZIP_FOLDER_NAME,
-                                                                               compiler, 
-                                                                               self.settings.compiler.runtime,
-                                                                               debug, 
-                                                                               iconv_headers_paths, 
-                                                                               iconv_lib_paths) 
-        self.output.warn(configure_command)
-        self.run(configure_command)
-        
-        makefile_path = os.path.join(self.ZIP_FOLDER_NAME, "win32", "Makefile.msvc")
-        # Zlib library name is not zlib.lib always, it depends on configuration
-        replace_in_file(makefile_path, "LIBS = $(LIBS) zlib.lib", "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info["zlib"].libs[0])
-        
-        make_command = "nmake /f Makefile.msvc" if self.settings.compiler == "Visual Studio" else "make -f Makefile.mingw"
-        make_command = "%s && cd %s/win32 && %s" % (vc_command, self.ZIP_FOLDER_NAME, make_command)
-        self.output.warn(make_command)
-        self.run(make_command)
-        
-    def build_with_configure(self): 
-        env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        env_line = env.command_line.replace('CFLAGS="', 'CFLAGS="-fPIC ')
-    
+    def build_windows(self):
+
+        with tools.chdir(os.path.join('sources', 'win32')):
+            vcvars = tools.vcvars_command(self.settings)
+            compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
+            debug = "yes" if self.settings.build_type == "Debug" else "no"
+
+            iconv_headers_paths = self.deps_cpp_info["libiconv"].include_paths[0]
+            iconv_lib_paths = " ".join(['lib="%s"' % lib for lib in self.deps_cpp_info["libiconv"].lib_paths])
+            configure_command = "%s && cscript configure.js " \
+                                "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" %s" % (
+                                    vcvars,
+                                    compiler,
+                                    self.settings.compiler.runtime,
+                                    debug,
+                                    iconv_headers_paths,
+                                    iconv_lib_paths)
+            self.output.warn(configure_command)
+            self.run(configure_command)
+
+            # Zlib library name is not zlib.lib always, it depends on configuration
+            tools.replace_in_file("Makefile.msvc",
+                                  "LIBS = $(LIBS) zlib.lib",
+                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info["zlib"].libs[0])
+            if self.settings.compiler == "Visual Studio":
+                self.run("%s && nmake /f Makefile.msvc" % (vcvars))
+            else:
+                self.run("%s && make -f Makefile.mingw" % (vcvars))
+
+    def build_with_configure(self):
+        # fix rpath
         if self.settings.os == "Macos":
-            old_str = '-install_name \$rpath/\$soname'
-            new_str = '-install_name \$soname'
-            replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
-                 
-        self.run("cd %s && %s ./configure --with-python=no --without-lzma" % (self.ZIP_FOLDER_NAME, env.command_line))
-        #self.run("cd %s && %s make check" % (self.ZIP_FOLDER_NAME, env.command_line))
-        self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
-        
-        
-        #zlib = "--with-zlib=%s" % self.deps_cpp_info["zlib"].lib_paths[0]
-        #configure_command = "cd %s && %s ./configure %s --with-python=no" % (self.ZIP_FOLDER_NAME, 
-        #                                                                         self.generic_env_configure_vars(), 
-        #                                                                         zlib)
-        #self.output.warn(configure_command)
-        #self.run(configure_command)
-        #self.run("cd %s && make" % self.ZIP_FOLDER_NAME)
-       
+            old_str = "-install_name \\$rpath/"
+            new_str = "-install_name "
+            tools.replace_in_file("sources/configure", old_str, new_str)
+
+        env_build = AutoToolsBuildEnvironment(self)
+        env_build.fpic = self.options.fPIC
+        with tools.environment_append(env_build.vars):
+            with tools.chdir('sources'):
+                configure_args = ['--with-python=no', '--without-lzma']
+                env_build.configure(args=configure_args)
+                env_build.make()
 
     def package(self):
-        # Copy findZLIB.cmake to package
         self.copy("FindLibXml2.cmake", ".", ".")
-       
-       
-        self.copy("*.h", "include", "%s/include" % (self.ZIP_FOLDER_NAME), keep_path=True)
-        if self.options.shared:
-            self.copy(pattern="*.so*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
-            self.copy(pattern="*.dylib*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
-            self.copy(pattern="*.dll*", dst="bin", src=self.ZIP_FOLDER_NAME, keep_path=False)
-        else:
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.ZIP_FOLDER_NAME, keep_path=False)
-        
-        self.copy(pattern="*.lib", dst="lib", src="%s" % self.ZIP_FOLDER_NAME, keep_path=False)
-        
+
+        with tools.chdir("sources"):
+            self.copy(pattern="LICENSE")
+            self.copy(pattern="*.h", dst="include", src="sources/include")
+            # specify glob with libxml name to avoid copying testdso.a
+            self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
+            if self.options.shared:
+                self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
+                self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
+                self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
+            else:
+                self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
+
     def package_info(self):
+        self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == "Linux" or self.settings.os == "Macos":
-            self.cpp_info.libs = ['xml2', 'm']
-        else:
-            self.cpp_info.libs = ['libxml2'] 
-   
+            self.cpp_info.libs.append('m')
