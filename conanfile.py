@@ -42,10 +42,12 @@ class Libxml2Conan(ConanFile):
             compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
             debug = "yes" if self.settings.build_type == "Debug" else "no"
 
-            iconv_headers_paths = self.deps_cpp_info["libiconv"].include_paths[0]
-            iconv_lib_paths = " ".join(['lib="%s"' % lib for lib in self.deps_cpp_info["libiconv"].lib_paths])
+            iconv_headers_paths = " ".join(self.deps_cpp_info["libiconv"].include_paths +
+                                           self.deps_cpp_info["zlib"].include_paths)
+            iconv_lib_paths = " ".join(self.deps_cpp_info["libiconv"].lib_paths +
+                                       self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
-                                "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" %s" % (
+                    "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
                                     vcvars,
                                     compiler,
                                     self.settings.compiler.runtime,
