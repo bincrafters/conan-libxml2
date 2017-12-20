@@ -83,6 +83,10 @@ class Libxml2Conan(ConanFile):
         with tools.environment_append(env_build.vars):
             with tools.chdir('sources'):
                 configure_args = ['--with-python=no', '--without-lzma']
+                if self.options.shared:
+                    configure_args.extend(['--enable-shared', '--disable-static'])
+                else:
+                    configure_args.extend(['--enable-static', '--disable-shared'])
                 env_build.configure(args=configure_args)
                 env_build.make()
 
@@ -94,12 +98,10 @@ class Libxml2Conan(ConanFile):
             self.copy(pattern="*.h", dst="include", src="sources/include")
             # specify glob with libxml name to avoid copying testdso.a
             self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
-            if self.options.shared:
-                self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
-                self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
-                self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
-            else:
-                self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
+            self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
+            self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
+            self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
+            self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
