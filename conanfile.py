@@ -16,6 +16,7 @@ class Libxml2Conan(ConanFile):
     default_options = "shared=False", "fPIC=True"
     requires = "zlib/[>=1.2.11]@conan/stable", "libiconv/1.15@bincrafters/stable"
     exports = ["FindLibXml2.cmake"]
+    short_paths = True
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
