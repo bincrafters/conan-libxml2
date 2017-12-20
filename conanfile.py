@@ -57,6 +57,9 @@ class Libxml2Conan(ConanFile):
             self.output.warn(configure_command)
             self.run(configure_command)
 
+            content = tools.load(os.path.join("source", "win32", "config.msvc"))
+            print content
+
             # Zlib library name is not zlib.lib always, it depends on configuration
             tools.replace_in_file("Makefile.msvc",
                                   "LIBS = $(LIBS) zlib.lib",
