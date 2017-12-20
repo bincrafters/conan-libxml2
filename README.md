@@ -52,4 +52,4 @@ The following command both runs all the steps of the conan file, and publishes t
     $ conan upload libxml2/2.9.3@bincrafters/stable --all -r bincrafters
 
 ## License
-[LICENSE_TYPE](LICENSE)
+[MIT](https://opensource.org/licenses/mit-license.html)
