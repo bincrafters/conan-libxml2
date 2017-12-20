@@ -94,8 +94,6 @@ class Libxml2Conan(ConanFile):
         self.copy("FindLibXml2.cmake", ".", ".")
 
         with tools.chdir("sources"):
-            # copy receipt license
-            self.copy(pattern="LICENSE.md")
             # copy package license
             self.copy("sources/COPYING", dst="licenses", ignore_case=True, keep_path=False)
             self.copy("sources/license*", dst="licenses", ignore_case=True, keep_path=False)
