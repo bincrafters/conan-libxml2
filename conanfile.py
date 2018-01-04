@@ -94,16 +94,15 @@ class Libxml2Conan(ConanFile):
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
 
-        with tools.chdir("sources"):
-            # copy package license
-            self.copy("sources/COPYING", dst="licenses", ignore_case=True, keep_path=False)
-            self.copy(pattern="*.h", dst="include", src="sources/include")
-            # specify glob with libxml name to avoid copying testdso.a
-            self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
-            self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
-            self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
-            self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
-            self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
+        # copy package license
+        self.copy("sources/COPYING", dst="licenses", ignore_case=True, keep_path=False)
+        self.copy(pattern="*.h", dst="include", src="sources/include")
+        # specify glob with libxml name to avoid copying testdso.a
+        self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
+        self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
+        self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
+        self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
+        self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
