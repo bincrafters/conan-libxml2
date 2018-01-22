@@ -58,12 +58,18 @@ class Libxml2Conan(ConanFile):
             self.run(configure_command)
 
             # Fix library names because they can be not just zlib.lib
+            libname = self.deps_cpp_info['zlib'].libs[0])
+            if not libname.endswith('.lib'):
+                libname += '.lib'
             tools.replace_in_file("Makefile.msvc",
                                   "LIBS = $(LIBS) zlib.lib",
-                                  "LIBS = $(LIBS) %s.lib" % self.deps_cpp_info['zlib'].libs[0])
+                                  "LIBS = $(LIBS) %s" % libname
+            libname = self.deps_cpp_info['libiconv'].libs[0])
+            if not libname.endswith('.lib'):
+                libname += '.lib'
             tools.replace_in_file("Makefile.msvc",
                                   "LIBS = $(LIBS) iconv.lib",
-                                  "LIBS = $(LIBS) %s" % self.deps_cpp_info['libiconv'].libs[0])
+                                  "LIBS = $(LIBS) %s" % libname)
 
             if self.settings.compiler == "Visual Studio":
                 self.run("%s && nmake /f Makefile.msvc" % (vcvars))
