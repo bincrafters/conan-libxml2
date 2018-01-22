@@ -17,19 +17,17 @@ class Libxml2Conan(ConanFile):
     requires = "zlib/[>=1.2.11]@conan/stable", "libiconv/1.15@bincrafters/stable"
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
+    source_subfolder = "source_subfolder"
     short_paths = True
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
-        os.rename("libxml2-{0}".format(self.version), "sources")
-        #Rename to "sources" is a convention to simplify later steps
+        os.rename("libxml2-{0}".format(self.version), self.source_subfolder)
 
     def config_options(self):
         del self.settings.compiler.libcxx
         if self.settings.os == "Windows":
             self.options.shared = True # Static in win doesn't work, runtime errors
-        self.options["libiconv"].shared = self.options.shared
-        self.options["zlib"].shared = self.options.shared
 
     def build(self):
         if self.settings.os == "Windows":
@@ -39,7 +37,7 @@ class Libxml2Conan(ConanFile):
 
     def build_windows(self):
 
-        with tools.chdir(os.path.join('sources', 'win32')):
+        with tools.chdir(os.path.join(self.source_subfolder, 'win32')):
             vcvars = tools.vcvars_command(self.settings)
             compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
             debug = "yes" if self.settings.build_type == "Debug" else "no"
@@ -73,16 +71,14 @@ class Libxml2Conan(ConanFile):
                 self.run("%s && make -f Makefile.mingw" % (vcvars))
 
     def build_with_configure(self):
-        # fix rpath
-        if self.settings.os == "Macos":
-            old_str = "-install_name \\$rpath/"
-            new_str = "-install_name "
-            tools.replace_in_file("sources/configure", old_str, new_str)
 
         env_build = AutoToolsBuildEnvironment(self)
         env_build.fpic = self.options.fPIC
         with tools.environment_append(env_build.vars):
-            with tools.chdir('sources'):
+            with tools.chdir(self.source_subfolder):
+                # fix rpath
+                if self.settings.os == "Macos":
+                    tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
                 configure_args = ['--with-python=no', '--without-lzma']
                 if self.options.shared:
                     configure_args.extend(['--enable-shared', '--disable-static'])
@@ -95,14 +91,14 @@ class Libxml2Conan(ConanFile):
         self.copy("FindLibXml2.cmake", ".", ".")
 
         # copy package license
-        self.copy("sources/COPYING", dst="licenses", ignore_case=True, keep_path=False)
-        self.copy(pattern="*.h", dst="include", src="sources/include")
+        self.copy("COPYING", dst="licenses", ignore_case=True, keep_path=False)
+        self.copy(pattern="*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
         # specify glob with libxml name to avoid copying testdso.a
-        self.copy(pattern="*libxml*.lib", dst="lib", src="sources", keep_path=False)
-        self.copy(pattern="*libxml*.dll", dst="bin", src="sources", keep_path=False)
-        self.copy(pattern="*libxml*.so*", dst="lib", src="sources", keep_path=False)
-        self.copy(pattern="*libxml*.dylib", dst="lib", src="sources", keep_path=False)
-        self.copy(pattern="*libxml*.a", dst="lib", src="sources", keep_path=False)
+        self.copy(pattern="*libxml*.lib", dst="lib", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="*libxml*.dll", dst="bin", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="*libxml*.so*", dst="lib", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="*libxml*.dylib", dst="lib", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="*libxml*.a", dst="lib", src=self.source_subfolder, keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
