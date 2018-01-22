@@ -12,7 +12,7 @@ if __name__ == "__main__":
     if platform.system() == "Windows" or True:
         items = []
         for item in builder.items:
-            if item.settings["compiler"] != "Visual Studio" or item.options[name + ":shared"]:
+            if item.settings["compiler"] != "Visual Studio" or item.options.get("libxml2:shared", False):
                 items.append(item)
         builder.items = items
 
