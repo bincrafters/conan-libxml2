@@ -2,7 +2,7 @@
 
 | Bintray | Appveyor | Travis |
 |---------|-----------|--------|
-|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg?branch=stable%2F2.9.3)](https://travis-ci.org/bincrafters/conan-libxml2)|
+|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg)](https://travis-ci.org/bincrafters/conan-libxml2)|
 
 ## Conan.io Information
 
@@ -36,11 +36,11 @@ The contents of this GIT repository are completely separate from the software be
 
 ### License(s) for packaged software:
 
-    ~/.conan/data/libxml2/2.9.3/bincrafters/stable/package/a4f6c4cfba391492265533621e6784b527c7c34b/licenses/COPYING
+    ~/.conan/data/<pkg_name>/<pkg_version>/bincrafters/package/<random_package_id>/license/<LICENSE_FILES_HERE>
 
 *Note :   The most common filenames for OSS licenses are `LICENSE` AND `COPYING` without file extensions.*
 	
 ### License for Bincrafters recipe:
 
-    ~/.conan/data/libxml2/2.9.3/bincrafters/stable/export/LICENSE.md
+    ~/.conan/data/<pkg_name>/<pkg_version>/bincrafters/export/LICENSE.md
 

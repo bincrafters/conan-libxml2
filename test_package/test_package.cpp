@@ -6,6 +6,6 @@ main(void)
 {
     LIBXML_TEST_VERSION
     xmlCleanupParser();
-		printf("Ok\n");
+    printf("Ok\n");
     return 0;
 }
