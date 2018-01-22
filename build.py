@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     builder = build_template_default.get_builder()
 
-    if platform.system() == "Windows" or True:
+    if platform.system() == "Windows":
         items = []
         for item in builder.items:
             if item.settings["compiler"] != "Visual Studio" or item.options.get("libxml2:shared", False):
