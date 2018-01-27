@@ -1,8 +1,8 @@
 ## Package Status
 
-| Bintray | Appveyor | Travis |
-|---------|-----------|--------|
-|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg)](https://travis-ci.org/bincrafters/conan-libxml2)|
+| Bintray | Windows | Linux | Macos |
+|---------|------------|--------|------|
+|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg)](https://travis-ci.org/bincrafters/conan-libxml2)| [![CircleCI](https://circleci.com/gh/bincrafters/conan-libxml2.svg?style=svg)](https://circleci.com/gh/bincrafters/conan-libxml2) |
 
 ## Conan.io Information
 
