@@ -10,6 +10,7 @@ class Libxml2Conan(ConanFile):
     version = "2.9.3"
     url = "https://github.com/bincrafters/conan-libxml2"
     description = "libxml2 is a software library for parsing XML documents"
+    homepage = "https://xmlsoft.org"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False] }
