@@ -1,8 +1,8 @@
 ## Package Status
 
-| Bintray | Windows | Linux | Macos |
-|---------|------------|--------|------|
-|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/s24il22t127tk3ry?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg)](https://travis-ci.org/bincrafters/conan-libxml2)| [![CircleCI](https://circleci.com/gh/bincrafters/conan-libxml2.svg?style=svg)](https://circleci.com/gh/bincrafters/conan-libxml2) |
+| Bintray | Windows | Linux & macOS |
+|:--------:|:---------:|:-----------------:|
+|[ ![Download](https://api.bintray.com/packages/bincrafters/public-conan/libxml2%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/libxml2%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/github/bincrafters/conan-libssh2?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-libxml2)|[![Build Status](https://travis-ci.org/bincrafters/conan-libxml2.svg)](https://travis-ci.org/bincrafters/conan-libxml2)|
 
 ## Conan.io Information
 
@@ -39,8 +39,7 @@ The contents of this GIT repository are completely separate from the software be
     ~/.conan/data/<pkg_name>/<pkg_version>/bincrafters/package/<random_package_id>/license/<LICENSE_FILES_HERE>
 
 *Note :   The most common filenames for OSS licenses are `LICENSE` AND `COPYING` without file extensions.*
-	
+
 ### License for Bincrafters recipe:
 
     ~/.conan/data/<pkg_name>/<pkg_version>/bincrafters/export/LICENSE.md
-
