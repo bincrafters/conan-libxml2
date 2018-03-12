@@ -26,8 +26,8 @@ class Libxml2Conan(ConanFile):
 
     def config_options(self):
         del self.settings.compiler.libcxx
-        #if self.settings.os == "Windows":
-        #    self.options.shared = True # Static in win doesn't work, runtime errors
+        if self.settings.os == "Windows" and not self.options.shared:
+            self.output.warn("Warning! Static builds in Windows are unstable")
 
     def build(self):
         if self.settings.os == "Windows":
