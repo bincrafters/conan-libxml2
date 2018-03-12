@@ -97,7 +97,7 @@ class Libxml2Conan(ConanFile):
         self.copy("FindLibXml2.cmake", ".", ".")
 
         # copy package license
-        self.copy("COPYING", dst="licenses", ignore_case=True, keep_path=False)
+        self.copy("COPYING", src=self.source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
         self.copy(pattern="*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
         # specify glob with libxml name to avoid copying testdso.a
         self.copy(pattern="*libxml*.lib", dst="lib", src=self.source_subfolder, keep_path=False)
