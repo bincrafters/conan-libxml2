@@ -24,7 +24,7 @@ class Libxml2Conan(ConanFile):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
         os.rename("libxml2-{0}".format(self.version), self.source_subfolder)
 
-    def config_options(self):
+    def configure(self):
         del self.settings.compiler.libcxx
         if self.settings.os == "Windows" and not self.options.shared:
             self.output.warn("Warning! Static builds in Windows are unstable")
