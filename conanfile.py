@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from conans import ConanFile, tools, AutoToolsBuildEnvironment
 import os
+from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
 
 class Libxml2Conan(ConanFile):
@@ -13,7 +13,7 @@ class Libxml2Conan(ConanFile):
     homepage = "https://xmlsoft.org"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False], "fPIC": [True, False] }
+    options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = "shared=False", "fPIC=True"
     requires = "zlib/1.2.11@conan/stable", "libiconv/1.15@bincrafters/stable"
     exports = ["LICENSE.md"]
@@ -48,13 +48,13 @@ class Libxml2Conan(ConanFile):
                             self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
                     "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
-                                    vcvars,
-                                    compiler,
-                                    self.settings.compiler.runtime,
-                                    debug,
-                                    includes,
-                                    libs)
-            self.output.warn(configure_command)
+                        vcvars,
+                        compiler,
+                        self.settings.compiler.runtime,
+                        debug,
+                        includes,
+                        libs)
+            self.output.info(configure_command)
             self.run(configure_command)
 
             # Fix library names because they can be not just zlib.lib
