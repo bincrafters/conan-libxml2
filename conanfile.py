@@ -19,7 +19,6 @@ class Libxml2Conan(ConanFile):
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     source_subfolder = "source_subfolder"
-    short_paths = True
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
