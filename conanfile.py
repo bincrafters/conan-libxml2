@@ -15,7 +15,7 @@ class Libxml2Conan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False] }
     default_options = "shared=False", "fPIC=True"
-    requires = "zlib/[>=1.2.11]@conan/stable", "libiconv/1.15@bincrafters/stable"
+    requires = "zlib/1.2.11@conan/stable", "libiconv/1.15@bincrafters/stable"
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     source_subfolder = "source_subfolder"
