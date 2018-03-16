@@ -7,7 +7,7 @@ from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
 class Libxml2Conan(ConanFile):
     name = "libxml2"
-    version = "2.9.8"
+    version = "2.9.3"
     url = "https://github.com/bincrafters/conan-libxml2"
     description = "libxml2 is a software library for parsing XML documents"
     homepage = "https://xmlsoft.org"
