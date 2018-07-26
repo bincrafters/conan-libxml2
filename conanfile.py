@@ -90,6 +90,8 @@ class Libxml2Conan(ConanFile):
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
                 configure_args = ['--with-python=no', '--without-lzma']
+                if self.options.fPIC:
+                    configure_args.extend(['--with-pic'])
                 if self.options.shared:
                     configure_args.extend(['--enable-shared', '--disable-static'])
                 else:
