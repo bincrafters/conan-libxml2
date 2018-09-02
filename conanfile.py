@@ -111,6 +111,8 @@ class Libxml2Conan(ConanFile):
         self.copy(pattern="*libxml*.so*", dst="lib", src=self.source_subfolder, keep_path=False)
         self.copy(pattern="*libxml*.dylib", dst="lib", src=self.source_subfolder, keep_path=False)
         self.copy(pattern="*libxml*.a", dst="lib", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="xmllint", dst="bin", src=self.source_subfolder, keep_path=False)
+        self.copy(pattern="xmllint.exe", dst="bin", src=self.source_subfolder, keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
