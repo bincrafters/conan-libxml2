@@ -25,7 +25,7 @@ class Libxml2Conan(ConanFile):
         os.rename("libxml2-{0}".format(self.version), self.source_subfolder)
 
     def config_options(self):
-        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
+        if self.settings.os == "Windows":
             del self.options.fPIC
 
     def configure(self):
@@ -114,5 +114,5 @@ class Libxml2Conan(ConanFile):
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             self.cpp_info.libs.append('m')
-        if self.settings.os == "Windows" and self.settings.compiler != "Visual Studio":
+        if self.settings.os == "Windows":
             self.cpp_info.libs.append('ws2_32')
