@@ -25,7 +25,7 @@ class Libxml2Conan(ConanFile):
         os.rename("libxml2-{0}".format(self.version), self.source_subfolder)
 
     def config_options(self):
-        if self.settings.os == "Windows":
+        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
             del self.options.fPIC
 
     def configure(self):
@@ -34,7 +34,7 @@ class Libxml2Conan(ConanFile):
             self.output.warn("Warning! Static builds in Windows are unstable")
 
     def build(self):
-        if self.settings.os == "Windows":
+        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
             self.build_windows()
         else:
             self.build_with_configure()
@@ -43,7 +43,6 @@ class Libxml2Conan(ConanFile):
 
         with tools.chdir(os.path.join(self.source_subfolder, 'win32')):
             vcvars = tools.vcvars_command(self.settings)
-            compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
             debug = "yes" if self.settings.build_type == "Debug" else "no"
 
             includes = ";".join(self.deps_cpp_info["libiconv"].include_paths +
@@ -51,9 +50,9 @@ class Libxml2Conan(ConanFile):
             libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
                             self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
-                    "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
+                "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
                         vcvars,
-                        compiler,
+                        "msvc",
                         self.settings.compiler.runtime,
                         debug,
                         includes,
@@ -75,14 +74,11 @@ class Libxml2Conan(ConanFile):
                                   "LIBS = $(LIBS) iconv.lib",
                                   "LIBS = $(LIBS) %s" % libname)
 
-            if self.settings.compiler == "Visual Studio":
-                self.run("%s && nmake /f Makefile.msvc" % (vcvars))
-            else:
-                self.run("%s && make -f Makefile.mingw" % (vcvars))
+            self.run("%s && nmake /f Makefile.msvc" % vcvars)
 
     def build_with_configure(self):
-
-        env_build = AutoToolsBuildEnvironment(self)
+        in_win = self.settings.os == "Windows"
+        env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
         env_build.fpic = self.options.fPIC
         with tools.environment_append(env_build.vars):
             with tools.chdir(self.source_subfolder):
@@ -118,3 +114,5 @@ class Libxml2Conan(ConanFile):
         self.cpp_info.libs = tools.collect_libs(self)
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             self.cpp_info.libs.append('m')
+        if self.settings.os == "Windows" and self.settings.compiler != "Visual Studio":
+            self.cpp_info.libs.append('ws2_32')
