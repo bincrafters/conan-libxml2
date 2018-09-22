@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import glob
 import os
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
@@ -19,7 +19,6 @@ class Libxml2Conan(ConanFile):
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     source_subfolder = "source_subfolder"
-    install_subfolder = "install_subfolder"
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
@@ -51,9 +50,9 @@ class Libxml2Conan(ConanFile):
             libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
                             self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
-                "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
+                "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
                         vcvars,
-                        "msvc",
+                        self.package_folder,
                         self.settings.compiler.runtime,
                         debug,
                         includes,
@@ -75,14 +74,14 @@ class Libxml2Conan(ConanFile):
                                   "LIBS = $(LIBS) iconv.lib",
                                   "LIBS = $(LIBS) %s" % libname)
 
-            self.run("%s && nmake /f Makefile.msvc" % vcvars)
+            self.run("%s && nmake /f Makefile.msvc install" % vcvars)
 
     def build_with_configure(self):
         in_win = self.settings.os == "Windows"
         env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
         if not in_win:
             env_build.fpic = self.options.fPIC
-        full_install_subfolder = tools.unix_path(os.path.join(self.build_folder, self.install_subfolder))
+        full_install_subfolder = tools.unix_path(self.package_folder)
         with tools.environment_append(env_build.vars):
             with tools.chdir(self.source_subfolder):
                 # fix rpath
@@ -96,14 +95,17 @@ class Libxml2Conan(ConanFile):
                 else:
                     configure_args.extend(['--enable-static', '--disable-shared'])
                 env_build.configure(args=configure_args)
-                env_build.make()
-                env_build.make(target="install")
+                env_build.make(args=["install"])
 
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
         # copy package license
         self.copy("COPYING", src=self.source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
-        self.copy(pattern="*", dst=".", src=self.install_subfolder)
+        if self.settings.os == "Windows":
+            # There is no way to avoid building the tests, but at least we don't want them in the package
+            for prefix in ["run", "test"]:
+                for test in glob.glob("%s/bin/%s*" % (self.package_folder, prefix)):
+                    os.remove(test)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
