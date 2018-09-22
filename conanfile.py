@@ -108,6 +108,8 @@ class Libxml2Conan(ConanFile):
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         self.cpp_info.includedirs = ["include/libxml2"]
+        if not self.options.shared:
+            self.cpp_info.defines = ["LIBXML_STATIC"]
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             self.cpp_info.libs.append('m')
         if self.settings.os == "Windows":
