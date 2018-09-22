@@ -19,6 +19,7 @@ class Libxml2Conan(ConanFile):
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     source_subfolder = "source_subfolder"
+    install_subfolder = "install_subfolder"
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
@@ -79,14 +80,16 @@ class Libxml2Conan(ConanFile):
     def build_with_configure(self):
         in_win = self.settings.os == "Windows"
         env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
-        env_build.fpic = self.options.fPIC
+        if not in_win:
+            env_build.fpic = self.options.fPIC
+        full_install_subfolder = tools.unix_path(os.path.join(self.build_folder, self.install_subfolder))
         with tools.environment_append(env_build.vars):
             with tools.chdir(self.source_subfolder):
                 # fix rpath
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
-                configure_args = ['--with-python=no', '--without-lzma']
-                if self.options.fPIC:
+                configure_args = ['--with-python=no', '--without-lzma', '--prefix=%s' % full_install_subfolder]
+                if env_build.fpic:
                     configure_args.extend(['--with-pic'])
                 if self.options.shared:
                     configure_args.extend(['--enable-shared', '--disable-static'])
@@ -94,24 +97,17 @@ class Libxml2Conan(ConanFile):
                     configure_args.extend(['--enable-static', '--disable-shared'])
                 env_build.configure(args=configure_args)
                 env_build.make()
+                env_build.make(target="install")
 
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
-
         # copy package license
         self.copy("COPYING", src=self.source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
-        self.copy(pattern="*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
-        # specify glob with libxml name to avoid copying testdso.a
-        self.copy(pattern="*libxml*.lib", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.dll", dst="bin", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.so*", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.dylib", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.a", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="xmllint", dst="bin", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="xmllint.exe", dst="bin", src=os.path.join(self.source_subfolder, "win32", "bin.msvc"), keep_path=False)
+        self.copy(pattern="*", dst=".", src=self.install_subfolder)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+        self.cpp_info.includedirs = ["include/libxml2"]
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             self.cpp_info.libs.append('m')
         if self.settings.os == "Windows":
