@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import glob
 import os
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
@@ -30,11 +30,9 @@ class Libxml2Conan(ConanFile):
 
     def configure(self):
         del self.settings.compiler.libcxx
-        if self.settings.os == "Windows" and not self.options.shared:
-            self.output.warn("Warning! Static builds in Windows are unstable")
 
     def build(self):
-        if self.settings.os == "Windows":
+        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
             self.build_windows()
         else:
             self.build_with_configure()
@@ -43,7 +41,6 @@ class Libxml2Conan(ConanFile):
 
         with tools.chdir(os.path.join(self.source_subfolder, 'win32')):
             vcvars = tools.vcvars_command(self.settings)
-            compiler = "msvc" if self.settings.compiler == "Visual Studio" else "gcc"
             debug = "yes" if self.settings.build_type == "Debug" else "no"
 
             includes = ";".join(self.deps_cpp_info["libiconv"].include_paths +
@@ -51,9 +48,9 @@ class Libxml2Conan(ConanFile):
             libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
                             self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
-                    "zlib=1 compiler=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
+                "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
                         vcvars,
-                        compiler,
+                        self.package_folder,
                         self.settings.compiler.runtime,
                         debug,
                         includes,
@@ -75,46 +72,45 @@ class Libxml2Conan(ConanFile):
                                   "LIBS = $(LIBS) iconv.lib",
                                   "LIBS = $(LIBS) %s" % libname)
 
-            if self.settings.compiler == "Visual Studio":
-                self.run("%s && nmake /f Makefile.msvc" % (vcvars))
-            else:
-                self.run("%s && make -f Makefile.mingw" % (vcvars))
+            self.run("%s && nmake /f Makefile.msvc install" % vcvars)
 
     def build_with_configure(self):
-
-        env_build = AutoToolsBuildEnvironment(self)
-        env_build.fpic = self.options.fPIC
+        in_win = self.settings.os == "Windows"
+        env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
+        if not in_win:
+            env_build.fpic = self.options.fPIC
+        full_install_subfolder = tools.unix_path(self.package_folder)
         with tools.environment_append(env_build.vars):
             with tools.chdir(self.source_subfolder):
                 # fix rpath
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
-                configure_args = ['--with-python=no', '--without-lzma']
-                if self.options.fPIC:
+                configure_args = ['--with-python=no', '--without-lzma', '--prefix=%s' % full_install_subfolder]
+                if env_build.fpic:
                     configure_args.extend(['--with-pic'])
                 if self.options.shared:
                     configure_args.extend(['--enable-shared', '--disable-static'])
                 else:
                     configure_args.extend(['--enable-static', '--disable-shared'])
                 env_build.configure(args=configure_args)
-                env_build.make()
+                env_build.make(args=["install"])
 
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
-
         # copy package license
         self.copy("COPYING", src=self.source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
-        self.copy(pattern="*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
-        # specify glob with libxml name to avoid copying testdso.a
-        self.copy(pattern="*libxml*.lib", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.dll", dst="bin", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.so*", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.dylib", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="*libxml*.a", dst="lib", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="xmllint", dst="bin", src=self.source_subfolder, keep_path=False)
-        self.copy(pattern="xmllint.exe", dst="bin", src=os.path.join(self.source_subfolder, "win32", "bin.msvc"), keep_path=False)
+        if self.settings.os == "Windows":
+            # There is no way to avoid building the tests, but at least we don't want them in the package
+            for prefix in ["run", "test"]:
+                for test in glob.glob("%s/bin/%s*" % (self.package_folder, prefix)):
+                    os.remove(test)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+        self.cpp_info.includedirs = ["include/libxml2"]
+        if not self.options.shared:
+            self.cpp_info.defines = ["LIBXML_STATIC"]
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             self.cpp_info.libs.append('m')
+        if self.settings.os == "Windows":
+            self.cpp_info.libs.append('ws2_32')
