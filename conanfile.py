@@ -93,7 +93,7 @@ class Libxml2Conan(ConanFile):
                 else:
                     configure_args.extend(['--enable-static', '--disable-shared'])
 
-                # Disable --build when building for iPhoneSimulator. The configure script halts on 
+                # Disable --build when building for iPhoneSimulator. The configure script halts on
                 # not knowing if it should cross-compile.
                 build = None
                 if self.settings.os == "iOS" and self.settings.arch == "x86_64":
