@@ -1,6 +1,3 @@
-env:
-   global:
-     - CONAN_PIP_PACKAGE: "'conan==1.8.4.dev1 --user'"
 linux: &linux
    os: linux
    dist: xenial
