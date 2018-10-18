@@ -15,12 +15,19 @@ class Libxml2Conan(ConanFile):
     homepage = "https://xmlsoft.org"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {'shared': False, 'fPIC': True}
-    requires = "zlib/1.2.11@conan/stable", "libiconv/1.15@bincrafters/stable"
+    options = {"shared": [True, False], "fPIC": [True, False], "zlib": [True, False], "lzma": [True, False], "iconv": [True, False]}
+    default_options = {'shared': False, 'fPIC': True, "iconv": True, "zlib": True, "lzma": False}
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     _source_subfolder = "source_subfolder"
+
+    def requirements(self):
+        if self.options.zlib:
+            self.requires("zlib/1.2.11@conan/stable")
+        if self.options.lzma:
+            self.requires("lzma/5.2.4@bincrafters/stable")
+        if self.options.iconv:
+            self.requires("libiconv/1.15@bincrafters/stable")
 
     @property
     def _is_msvc(self):
@@ -50,35 +57,43 @@ class Libxml2Conan(ConanFile):
             debug = "yes" if self.settings.build_type == "Debug" else "no"
             static = "no" if self.options.shared else "yes"
 
-            includes = ";".join(self.deps_cpp_info["libiconv"].include_paths +
-                                self.deps_cpp_info["zlib"].include_paths)
-            libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
-                            self.deps_cpp_info["zlib"].lib_paths)
             with tools.vcvars(self.settings):
                 configure_command = "cscript configure.js " \
-                    "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
+                    "zlib=%d lzma=%d iconv=%d compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
+                            1 if self.options.zlib else 0,
+                            1 if self.options.lzma else 0,
+                            1 if self.options.iconv else 0,
                             self.package_folder,
                             self.settings.compiler.runtime,
                             debug,
                             static,
-                            includes,
-                            libs)
+                            ";".join(self.deps_cpp_info.include_paths),
+                            ";".join(self.deps_cpp_info.lib_paths))
                 self.output.info(configure_command)
                 self.run(configure_command)
 
                 # Fix library names because they can be not just zlib.lib
-                libname = self.deps_cpp_info['zlib'].libs[0]
-                if not libname.endswith('.lib'):
-                    libname += '.lib'
-                tools.replace_in_file("Makefile.msvc",
-                                      "LIBS = $(LIBS) zlib.lib",
-                                      "LIBS = $(LIBS) %s" % libname)
-                libname = self.deps_cpp_info['libiconv'].libs[0]
-                if not libname.endswith('.lib'):
-                    libname += '.lib'
-                tools.replace_in_file("Makefile.msvc",
-                                      "LIBS = $(LIBS) iconv.lib",
-                                      "LIBS = $(LIBS) %s" % libname)
+                if self.options.zlib:
+                    libname = self.deps_cpp_info['zlib'].libs[0]
+                    if not libname.endswith('.lib'):
+                        libname += '.lib'
+                    tools.replace_in_file("Makefile.msvc",
+                                          "LIBS = $(LIBS) zlib.lib",
+                                          "LIBS = $(LIBS) %s" % libname)
+                if self.options.lzma:
+                    libname = self.deps_cpp_info['lzma'].libs[0]
+                    if not libname.endswith('.lib'):
+                        libname += '.lib'
+                    tools.replace_in_file("Makefile.msvc",
+                                          "LIBS = $(LIBS) liblzma.lib",
+                                          "LIBS = $(LIBS) %s" % libname)
+                if self.options.iconv:
+                    libname = self.deps_cpp_info['libiconv'].libs[0]
+                    if not libname.endswith('.lib'):
+                        libname += '.lib'
+                    tools.replace_in_file("Makefile.msvc",
+                                          "LIBS = $(LIBS) iconv.lib",
+                                          "LIBS = $(LIBS) %s" % libname)
 
                 self.run("nmake /f Makefile.msvc install")
 
@@ -93,20 +108,23 @@ class Libxml2Conan(ConanFile):
                 # fix rpath
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
-                configure_args = ['--with-python=no', '--without-lzma', '--prefix=%s' % full_install_subfolder]
+                configure_args = ['--with-python=no', '--prefix=%s' % full_install_subfolder]
                 if env_build.fpic:
                     configure_args.extend(['--with-pic'])
                 if self.options.shared:
                     configure_args.extend(['--enable-shared', '--disable-static'])
                 else:
                     configure_args.extend(['--enable-static', '--disable-shared'])
+                configure_args.extend(['--with-zlib' if self.options.zlib else '--without-zlib'])
+                configure_args.extend(['--with-lzma' if self.options.lzma else '--without-lzma'])
+                configure_args.extend(['--with-iconv' if self.options.iconv else '--without-iconv'])
 
                 # Disable --build when building for iPhoneSimulator. The configure script halts on
                 # not knowing if it should cross-compile.
                 build = None
                 if self.settings.os == "iOS" and self.settings.arch == "x86_64":
                     build = False
-                    
+
                 env_build.configure(args=configure_args, build=build)
                 env_build.make(args=["install"])
 
