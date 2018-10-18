@@ -20,8 +20,7 @@ if __name__ == "__main__":
                  "msys2_installer/latest@bincrafters/stable"]
             items.append([item.settings, item.options, item.env_vars,
                           new_build_requires, item.reference])
-        # do not use windows shared builds
-        elif not (platform.system() == "Windows" and item.options.get("libxml2:shared", False)):
+        else:
             items.append(item)
     builder.items = items
 
