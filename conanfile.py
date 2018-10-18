@@ -130,7 +130,7 @@ class Libxml2Conan(ConanFile):
         if self._is_msvc:
             self.cpp_info.libs = ['libxml2' if self.options.shared else 'libxml2_a']
         else:
-            self.cpp_info.libs = ['xml']
+            self.cpp_info.libs = ['xml2']
         self.cpp_info.includedirs = ["include/libxml2"]
         if not self.options.shared:
             self.cpp_info.defines = ["LIBXML_STATIC"]
