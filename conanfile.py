@@ -111,6 +111,9 @@ class Libxml2Conan(ConanFile):
             for prefix in ["run", "test"]:
                 for test in glob.glob("%s/bin/%s*" % (self.package_folder, prefix)):
                     os.remove(test)
+        for header in ["win32config.h", "wsockcompat.h"]:
+            self.copy(pattern=header, src=os.path.join(self.source_subfolder, "include"),
+                      dst=os.path.join("include", "libxml2"), keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
