@@ -47,7 +47,6 @@ class Libxml2Conan(ConanFile):
     def _build_windows(self):
 
         with tools.chdir(os.path.join(self._source_subfolder, 'win32')):
-            vcvars = tools.vcvars_command(self.settings)
             debug = "yes" if self.settings.build_type == "Debug" else "no"
             static = "no" if self.options.shared else "yes"
 
@@ -55,33 +54,33 @@ class Libxml2Conan(ConanFile):
                                 self.deps_cpp_info["zlib"].include_paths)
             libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
                             self.deps_cpp_info["zlib"].lib_paths)
-            configure_command = "%s && cscript configure.js " \
-                "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
-                        vcvars,
-                        self.package_folder,
-                        self.settings.compiler.runtime,
-                        debug,
-                        static,
-                        includes,
-                        libs)
-            self.output.info(configure_command)
-            self.run(configure_command)
+            with tools.vcvars(self.settings):
+                configure_command = "cscript configure.js " \
+                    "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
+                            self.package_folder,
+                            self.settings.compiler.runtime,
+                            debug,
+                            static,
+                            includes,
+                            libs)
+                self.output.info(configure_command)
+                self.run(configure_command)
 
-            # Fix library names because they can be not just zlib.lib
-            libname = self.deps_cpp_info['zlib'].libs[0]
-            if not libname.endswith('.lib'):
-                libname += '.lib'
-            tools.replace_in_file("Makefile.msvc",
-                                  "LIBS = $(LIBS) zlib.lib",
-                                  "LIBS = $(LIBS) %s" % libname)
-            libname = self.deps_cpp_info['libiconv'].libs[0]
-            if not libname.endswith('.lib'):
-                libname += '.lib'
-            tools.replace_in_file("Makefile.msvc",
-                                  "LIBS = $(LIBS) iconv.lib",
-                                  "LIBS = $(LIBS) %s" % libname)
+                # Fix library names because they can be not just zlib.lib
+                libname = self.deps_cpp_info['zlib'].libs[0]
+                if not libname.endswith('.lib'):
+                    libname += '.lib'
+                tools.replace_in_file("Makefile.msvc",
+                                      "LIBS = $(LIBS) zlib.lib",
+                                      "LIBS = $(LIBS) %s" % libname)
+                libname = self.deps_cpp_info['libiconv'].libs[0]
+                if not libname.endswith('.lib'):
+                    libname += '.lib'
+                tools.replace_in_file("Makefile.msvc",
+                                      "LIBS = $(LIBS) iconv.lib",
+                                      "LIBS = $(LIBS) %s" % libname)
 
-            self.run("%s && nmake /f Makefile.msvc install" % vcvars)
+                self.run("nmake /f Makefile.msvc install")
 
     def _build_with_configure(self):
         in_win = self.settings.os == "Windows"
