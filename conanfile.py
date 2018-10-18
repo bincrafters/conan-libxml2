@@ -14,15 +14,15 @@ class Libxml2Conan(ConanFile):
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = "shared=False", "fPIC=True"
+    default_options = {'shared': False, 'fPIC': True}
     requires = "zlib/1.2.11@conan/stable", "libiconv/1.15@bincrafters/stable"
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
-    source_subfolder = "source_subfolder"
+    _source_subfolder = "source_subfolder"
 
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
-        os.rename("libxml2-{0}".format(self.version), self.source_subfolder)
+        os.rename("libxml2-{0}".format(self.version), self._source_subfolder)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -39,7 +39,7 @@ class Libxml2Conan(ConanFile):
 
     def build_windows(self):
 
-        with tools.chdir(os.path.join(self.source_subfolder, 'win32')):
+        with tools.chdir(os.path.join(self._source_subfolder, 'win32')):
             vcvars = tools.vcvars_command(self.settings)
             debug = "yes" if self.settings.build_type == "Debug" else "no"
 
@@ -81,7 +81,7 @@ class Libxml2Conan(ConanFile):
             env_build.fpic = self.options.fPIC
         full_install_subfolder = tools.unix_path(self.package_folder)
         with tools.environment_append(env_build.vars):
-            with tools.chdir(self.source_subfolder):
+            with tools.chdir(self._source_subfolder):
                 # fix rpath
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
@@ -105,14 +105,14 @@ class Libxml2Conan(ConanFile):
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
         # copy package license
-        self.copy("COPYING", src=self.source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
+        self.copy("COPYING", src=self._source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
         if self.settings.os == "Windows":
             # There is no way to avoid building the tests, but at least we don't want them in the package
             for prefix in ["run", "test"]:
                 for test in glob.glob("%s/bin/%s*" % (self.package_folder, prefix)):
                     os.remove(test)
         for header in ["win32config.h", "wsockcompat.h"]:
-            self.copy(pattern=header, src=os.path.join(self.source_subfolder, "include"),
+            self.copy(pattern=header, src=os.path.join(self._source_subfolder, "include"),
                       dst=os.path.join("include", "libxml2"), keep_path=False)
 
     def package_info(self):
