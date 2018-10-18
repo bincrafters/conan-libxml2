@@ -20,6 +20,10 @@ class Libxml2Conan(ConanFile):
     exports_sources = ["FindLibXml2.cmake"]
     _source_subfolder = "source_subfolder"
 
+    @property
+    def _is_msvc(self):
+        return self.settings.compiler == 'Visual Studio'
+
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
         os.rename("libxml2-{0}".format(self.version), self._source_subfolder)
@@ -32,27 +36,29 @@ class Libxml2Conan(ConanFile):
         del self.settings.compiler.libcxx
 
     def build(self):
-        if self.settings.os == "Windows" and self.settings.compiler == "Visual Studio":
-            self.build_windows()
+        if self._is_msvc:
+            self._build_windows()
         else:
-            self.build_with_configure()
+            self._build_with_configure()
 
-    def build_windows(self):
+    def _build_windows(self):
 
         with tools.chdir(os.path.join(self._source_subfolder, 'win32')):
             vcvars = tools.vcvars_command(self.settings)
             debug = "yes" if self.settings.build_type == "Debug" else "no"
+            static = "no" if self.options.shared else "yes"
 
             includes = ";".join(self.deps_cpp_info["libiconv"].include_paths +
                                 self.deps_cpp_info["zlib"].include_paths)
             libs = ";".join(self.deps_cpp_info["libiconv"].lib_paths +
                             self.deps_cpp_info["zlib"].lib_paths)
             configure_command = "%s && cscript configure.js " \
-                "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s include=\"%s\" lib=\"%s\"" % (
+                "zlib=1 compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
                         vcvars,
                         self.package_folder,
                         self.settings.compiler.runtime,
                         debug,
+                        static,
                         includes,
                         libs)
             self.output.info(configure_command)
@@ -74,7 +80,7 @@ class Libxml2Conan(ConanFile):
 
             self.run("%s && nmake /f Makefile.msvc install" % vcvars)
 
-    def build_with_configure(self):
+    def _build_with_configure(self):
         in_win = self.settings.os == "Windows"
         env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
         if not in_win:
@@ -99,7 +105,7 @@ class Libxml2Conan(ConanFile):
                 if self.settings.os == "iOS" and self.settings.arch == "x86_64":
                     build = False
                     
-                env_build.configure(args=configure_args,build=build)
+                env_build.configure(args=configure_args, build=build)
                 env_build.make(args=["install"])
 
     def package(self):
@@ -114,9 +120,17 @@ class Libxml2Conan(ConanFile):
         for header in ["win32config.h", "wsockcompat.h"]:
             self.copy(pattern=header, src=os.path.join(self._source_subfolder, "include"),
                       dst=os.path.join("include", "libxml2"), keep_path=False)
+        if self._is_msvc:
+            # remove redundant libraries to avoid confusion
+            os.unlink(os.path.join(self.package_folder, 'lib', 'libxml2_a_dll.lib'))
+            os.unlink(os.path.join(self.package_folder, 'lib',
+                                   'libxml2_a.lib' if self.options.shared else 'libxml2.lib'))
 
     def package_info(self):
-        self.cpp_info.libs = tools.collect_libs(self)
+        if self._is_msvc:
+            self.cpp_info.libs = ['libxml2' if self.options.shared else 'libxml2_a']
+        else:
+            self.cpp_info.libs = ['xml']
         self.cpp_info.includedirs = ["include/libxml2"]
         if not self.options.shared:
             self.cpp_info.defines = ["LIBXML_STATIC"]
