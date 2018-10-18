@@ -2,7 +2,7 @@ build: false
 
 environment:
     PYTHON: "C:\\Python37"
-    CONAN_PIP_PACKAGE: "conan==1.8.4.dev1 --user"
+    CONAN_PIP_PACKAGE: "'conan==1.8.4.dev1 --user'"
 
     matrix:
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
