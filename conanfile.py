@@ -7,7 +7,7 @@ from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
 class Libxml2Conan(ConanFile):
     name = "libxml2"
-    version = "2.9.8"
+    version = "2.9.9"
     url = "https://github.com/bincrafters/conan-libxml2"
     description = "libxml2 is a software library for parsing XML documents"
     homepage = "https://xmlsoft.org"
@@ -25,7 +25,8 @@ class Libxml2Conan(ConanFile):
         return self.settings.compiler == 'Visual Studio'
 
     def source(self):
-        tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version))
+        tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version),
+                  sha256="94fb70890143e3c6549f265cee93ec064c80a84c42ad0f23e85ee1fd6540a871")
         os.rename("libxml2-{0}".format(self.version), self._source_subfolder)
 
     def config_options(self):
