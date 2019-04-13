@@ -15,8 +15,18 @@ class Libxml2Conan(ConanFile):
     homepage = "https://xmlsoft.org"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False], "fPIC": [True, False], "zlib": [True, False], "lzma": [True, False], "iconv": [True, False]}
-    default_options = {'shared': False, 'fPIC': True, "iconv": True, "zlib": True, "lzma": False}
+    options = {"shared": [True, False],
+               "fPIC": [True, False],
+               "zlib": [True, False],
+               "lzma": [True, False],
+               "iconv": [True, False],
+               "icu": [True, False]}
+    default_options = {'shared': False,
+                       'fPIC': True,
+                       "iconv": True,
+                       "zlib": True,
+                       "lzma": False,
+                       "icu": False}
     exports = ["LICENSE.md"]
     exports_sources = ["FindLibXml2.cmake"]
     _source_subfolder = "source_subfolder"
@@ -28,6 +38,8 @@ class Libxml2Conan(ConanFile):
             self.requires("lzma/5.2.4@bincrafters/stable")
         if self.options.iconv:
             self.requires("libiconv/1.15@bincrafters/stable")
+        if self.options.icu:
+            self.requires("icu/63.1@bincrafters/stable")
 
     @property
     def _is_msvc(self):
@@ -52,48 +64,46 @@ class Libxml2Conan(ConanFile):
             self._build_with_configure()
 
     def _build_windows(self):
-
         with tools.chdir(os.path.join(self._source_subfolder, 'win32')):
             debug = "yes" if self.settings.build_type == "Debug" else "no"
             static = "no" if self.options.shared else "yes"
 
             with tools.vcvars(self.settings):
-                configure_command = "cscript configure.js " \
-                    "zlib=%d lzma=%d iconv=%d compiler=msvc prefix=%s cruntime=/%s debug=%s static=%s include=\"%s\" lib=\"%s\"" % (
-                            1 if self.options.zlib else 0,
-                            1 if self.options.lzma else 0,
-                            1 if self.options.iconv else 0,
-                            self.package_folder,
-                            self.settings.compiler.runtime,
-                            debug,
-                            static,
-                            ";".join(self.deps_cpp_info.include_paths),
-                            ";".join(self.deps_cpp_info.lib_paths))
+                args = ["cscript",
+                        "configure.js",
+                        "zlib=%d" % (1 if self.options.zlib else 0),
+                        "lzma=%d" % (1 if self.options.lzma else 0),
+                        "iconv=%d" % (1 if self.options.iconv else 0),
+                        "icu=%d" % (1 if self.options.icu else 0),
+                        "compiler=msvc",
+                        "prefix=%s" % self.package_folder,
+                        "cruntime=/%s" % self.settings.compiler.runtime,
+                        "debug=%s" % debug,
+                        "static=%s" % static,
+                        'include="%s"' % ";".join(self.deps_cpp_info.include_paths),
+                        'lib="%s"' % ";".join(self.deps_cpp_info.lib_paths)]
+                configure_command = ' '.join(args)
                 self.output.info(configure_command)
                 self.run(configure_command)
 
                 # Fix library names because they can be not just zlib.lib
-                if self.options.zlib:
-                    libname = self.deps_cpp_info['zlib'].libs[0]
-                    if not libname.endswith('.lib'):
-                        libname += '.lib'
-                    tools.replace_in_file("Makefile.msvc",
-                                          "LIBS = $(LIBS) zlib.lib",
-                                          "LIBS = $(LIBS) %s" % libname)
-                if self.options.lzma:
-                    libname = self.deps_cpp_info['lzma'].libs[0]
-                    if not libname.endswith('.lib'):
-                        libname += '.lib'
-                    tools.replace_in_file("Makefile.msvc",
-                                          "LIBS = $(LIBS) liblzma.lib",
-                                          "LIBS = $(LIBS) %s" % libname)
-                if self.options.iconv:
-                    libname = self.deps_cpp_info['libiconv'].libs[0]
-                    if not libname.endswith('.lib'):
-                        libname += '.lib'
-                    tools.replace_in_file("Makefile.msvc",
-                                          "LIBS = $(LIBS) iconv.lib",
-                                          "LIBS = $(LIBS) %s" % libname)
+                def fix_library(option, package, old_libname):
+                    if option:
+                        libs = []
+                        for lib in self.deps_cpp_info[package].libs:
+                            libname = lib
+                            if not libname.endswith('.lib'):
+                                libname += '.lib'
+                            libs.append(libname)
+                        tools.replace_in_file("Makefile.msvc",
+                                              "LIBS = $(LIBS) %s" % old_libname,
+                                              "LIBS = $(LIBS) %s" % ' '.join(libs))
+
+                fix_library(self.options.zlib, 'zlib', 'zlib.lib')
+                fix_library(self.options.lzma, 'lzma', 'liblzma.lib')
+                fix_library(self.options.iconv, 'libiconv', 'iconv.lib')
+                fix_library(self.options.icu, 'icu', 'advapi32.lib sicuuc.lib sicuin.lib sicudt.lib')
+                fix_library(self.options.icu, 'icu', 'icuuc.lib icuin.lib icudt.lib')
 
                 self.run("nmake /f Makefile.msvc install")
 
@@ -118,6 +128,7 @@ class Libxml2Conan(ConanFile):
                 configure_args.extend(['--with-zlib' if self.options.zlib else '--without-zlib'])
                 configure_args.extend(['--with-lzma' if self.options.lzma else '--without-lzma'])
                 configure_args.extend(['--with-iconv' if self.options.iconv else '--without-iconv'])
+                configure_args.extend(['--with-icu' if self.options.icu else '--without-icu'])
 
                 # Disable --build when building for iPhoneSimulator. The configure script halts on
                 # not knowing if it should cross-compile.
