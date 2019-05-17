@@ -112,7 +112,7 @@ class Libxml2Conan(ConanFile):
         env_build = AutoToolsBuildEnvironment(self, win_bash=in_win)
         if not in_win:
             env_build.fpic = self.options.fPIC
-        full_install_subfolder = tools.unix_path(self.package_folder)
+        full_install_subfolder = tools.unix_path(self.package_folder) if in_win else self.package_folder
         with tools.environment_append(env_build.vars):
             with tools.chdir(self._source_subfolder):
                 # fix rpath
