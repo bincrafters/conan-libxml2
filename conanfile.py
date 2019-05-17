@@ -45,10 +45,13 @@ class Libxml2Conan(ConanFile):
     def _is_msvc(self):
         return self.settings.compiler == 'Visual Studio'
 
+    def full_source_subfolder(self):
+        return os.path.join(self.source_folder, self._source_subfolder)
+
     def source(self):
         tools.get("http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(self.version),
                   sha256="94fb70890143e3c6549f265cee93ec064c80a84c42ad0f23e85ee1fd6540a871")
-        os.rename("libxml2-{0}".format(self.version), self._source_subfolder)
+        os.rename("libxml2-{0}".format(self.version), self.full_source_subfolder())
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -64,7 +67,7 @@ class Libxml2Conan(ConanFile):
             self._build_with_configure()
 
     def _build_windows(self):
-        with tools.chdir(os.path.join(self._source_subfolder, 'win32')):
+        with tools.chdir(os.path.join(self.full_source_subfolder(), 'win32')):
             debug = "yes" if self.settings.build_type == "Debug" else "no"
             static = "no" if self.options.shared else "yes"
 
@@ -114,7 +117,7 @@ class Libxml2Conan(ConanFile):
             env_build.fpic = self.options.fPIC
         full_install_subfolder = tools.unix_path(self.package_folder) if in_win else self.package_folder
         with tools.environment_append(env_build.vars):
-            with tools.chdir(self._source_subfolder):
+            with tools.chdir(self.full_source_subfolder()):
                 # fix rpath
                 if self.settings.os == "Macos":
                     tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
@@ -142,14 +145,14 @@ class Libxml2Conan(ConanFile):
     def package(self):
         self.copy("FindLibXml2.cmake", ".", ".")
         # copy package license
-        self.copy("COPYING", src=self._source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
+        self.copy("COPYING", src=self.full_source_subfolder(), dst="licenses", ignore_case=True, keep_path=False)
         if self.settings.os == "Windows":
             # There is no way to avoid building the tests, but at least we don't want them in the package
             for prefix in ["run", "test"]:
                 for test in glob.glob("%s/bin/%s*" % (self.package_folder, prefix)):
                     os.remove(test)
         for header in ["win32config.h", "wsockcompat.h"]:
-            self.copy(pattern=header, src=os.path.join(self._source_subfolder, "include"),
+            self.copy(pattern=header, src=os.path.join(self.full_source_subfolder(), "include"),
                       dst=os.path.join("include", "libxml2"), keep_path=False)
         if self._is_msvc:
             # remove redundant libraries to avoid confusion
