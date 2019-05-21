@@ -119,7 +119,7 @@ class Libxml2Conan(ConanFile):
         full_install_subfolder = tools.unix_path(self.package_folder) if in_win else self.package_folder
         # fix rpath
         if self.settings.os == "Macos":
-            tools.replace_in_file("configure", r"-install_name \$rpath/", "-install_name ")
+            tools.replace_in_file(os.path.join(self._full_source_subfolder, "configure"), r"-install_name \$rpath/", "-install_name ")
         configure_args = ['--with-python=no', '--prefix=%s' % full_install_subfolder]
         if env_build.fpic:
             configure_args.extend(['--with-pic'])
