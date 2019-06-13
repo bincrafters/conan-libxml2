@@ -158,6 +158,9 @@ class Libxml2Conan(ConanFile):
             os.unlink(os.path.join(self.package_folder, 'lib', 'libxml2_a_dll.lib'))
             os.unlink(os.path.join(self.package_folder, 'lib',
                                    'libxml2_a.lib' if self.options.shared else 'libxml2.lib'))
+        la = os.path.join(self.package_folder, 'lib', 'libxml2.la')
+        if os.path.isfile(la):
+            os.unlink(la)
 
     def package_info(self):
         if self._is_msvc:
