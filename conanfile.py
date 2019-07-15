@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import glob
 import os
-from conans import ConanFile, tools, AutoToolsBuildEnvironment
+from conans import ConanFile, tools, AutoToolsBuildEnvironment, VisualStudioBuildEnvironment
 
 
 class Libxml2Conan(ConanFile):
@@ -109,7 +109,8 @@ class Libxml2Conan(ConanFile):
                 fix_library(self.options.icu, 'icu', 'advapi32.lib sicuuc.lib sicuin.lib sicudt.lib')
                 fix_library(self.options.icu, 'icu', 'icuuc.lib icuin.lib icudt.lib')
 
-                self.run("nmake /f Makefile.msvc install")
+                with tools.environment_append(VisualStudioBuildEnvironment(self).vars):
+                    self.run("nmake /f Makefile.msvc install")
 
     def _build_with_configure(self):
         in_win = self.settings.os == "Windows"
