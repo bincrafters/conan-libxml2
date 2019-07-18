@@ -44,6 +44,10 @@ class Libxml2Conan(ConanFile):
     @property
     def _is_msvc(self):
         return self.settings.compiler == 'Visual Studio'
+    
+    @property
+    def _is_mingw(self):
+        return self.settings.compiler == 'gcc' and self.settings.os == 'Windows'
 
     @property
     def _full_source_subfolder(self):
@@ -64,6 +68,8 @@ class Libxml2Conan(ConanFile):
     def build(self):
         if self._is_msvc:
             self._build_windows()
+        elif self._is_mingw:
+            self._build_mingw()
         else:
             self._build_with_configure()
 
@@ -111,6 +117,28 @@ class Libxml2Conan(ConanFile):
 
                 with tools.environment_append(VisualStudioBuildEnvironment(self).vars):
                     self.run("nmake /f Makefile.msvc install")
+
+    def _build_mingw(self):
+        with tools.chdir(os.path.join(self._full_source_subfolder, 'win32')):
+            debug = "yes" if self.settings.build_type == "Debug" else "no"
+            static = "no" if self.options.shared else "yes"
+
+            args = ["cscript",
+                    "configure.js",
+                    "zlib=%d" % (1 if self.options.zlib else 0),
+                    "lzma=%d" % (1 if self.options.lzma else 0),
+                    "iconv=%d" % (1 if self.options.iconv else 0),
+                    "icu=%d" % (1 if self.options.icu else 0),
+                    "compiler=mingw",
+                    "prefix=%s" % self.package_folder,
+                    "debug=%s" % debug,
+                    "static=%s" % static,
+                    'include="%s"' % " -I".join(self.deps_cpp_info.include_paths),
+                    'lib="%s"' % " -L".join(self.deps_cpp_info.lib_paths)]
+            configure_command = ' '.join(args)
+            self.output.info(configure_command)
+            self.run(configure_command)
+            self.run("mingw32-make -f Makefile.mingw install")
 
     def _build_with_configure(self):
         in_win = self.settings.os == "Windows"
