@@ -28,7 +28,6 @@ class Libxml2Conan(ConanFile):
                        "lzma": False,
                        "icu": False}
     exports = ["LICENSE.md"]
-    exports_sources = ["FindLibXml2.cmake"]
     _source_subfolder = "source_subfolder"
 
     def requirements(self):
@@ -44,7 +43,7 @@ class Libxml2Conan(ConanFile):
     @property
     def _is_msvc(self):
         return self.settings.compiler == 'Visual Studio'
-    
+
     @property
     def _is_mingw(self):
         return self.settings.compiler == 'gcc' and self.settings.os == 'Windows'
@@ -171,7 +170,6 @@ class Libxml2Conan(ConanFile):
         env_build.make(args=["install"])
 
     def package(self):
-        self.copy("FindLibXml2.cmake", ".", ".")
         # copy package license
         self.copy("COPYING", src=self._full_source_subfolder, dst="licenses", ignore_case=True, keep_path=False)
         if self.settings.os == "Windows":
