@@ -11,7 +11,7 @@ class Libxml2Conan(ConanFile):
     url = "https://github.com/bincrafters/conan-libxml2"
     description = "libxml2 is a software library for parsing XML documents"
     author = "Bincrafters <bincrafters@gmail.com>"
-    topics = "XML", "parser", "validation"
+    topics = ("XML", "parser", "validation")
     homepage = "https://xmlsoft.org"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
@@ -32,11 +32,11 @@ class Libxml2Conan(ConanFile):
 
     def requirements(self):
         if self.options.zlib:
-            self.requires("zlib/1.2.11@conan/stable")
+            self.requires("zlib/1.2.11")
         if self.options.lzma:
-            self.requires("lzma/5.2.4@bincrafters/stable")
+            self.requires("xz_utils/5.2.4")
         if self.options.iconv:
-            self.requires("libiconv/1.15@bincrafters/stable")
+            self.requires("libiconv/1.15")
         if self.options.icu:
             self.requires("icu/63.1@bincrafters/stable")
 
